@@ -189,15 +189,29 @@ tr:hover td{background:#fafbff}
     </div>
     <div class="form-grid">
       <div class="form-group"><label>Nama Klien / Proyek</label><input type="text" id="dClient" placeholder="e.g. Bpk. Hendra"></div>
-      <div class="form-group"><label>Tipe Produk SPC</label><select id="dProduct" onchange="loadProductColors()"></select></div>
+      <div class="form-group"><label>Tipe Produk SPC</label><select id="dProduct"></select></div>
       <div class="form-group"><label>Lokasi Proyek</label><input type="text" id="dLocation" placeholder="e.g. Bekasi..."></div>
       <div class="form-group"><label>Luas Area (m²)</label><input type="number" id="dArea" placeholder="e.g. 50"></div>
       <div class="form-group"><label>Nilai Deal (Rp)</label><input type="text" id="dValue" placeholder="e.g. 5.000.000" oninput="formatRupiahInput(this); updateKomisiPreview()"></div>
       <div class="form-group"><label>Status</label><select id="dStatus"><option value="prospect">Prospect</option><option value="negotiation">Negotiation</option><option value="closed">Closed ✓</option><option value="lost">Lost ✗</option></select></div>
     </div>
-    <div id="colorBubbleSection" style="display:none;margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Pilih Warna Produk</label>
-      <div class="color-bubbles" id="colorBubbles"></div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Pilih Warna Produk</label>
+      <div style="background:var(--gray);padding:14px;border-radius:10px;margin-top:8px">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="dealColorName" placeholder="Nama warna (e.g. Oak Natural)" style="flex:1;padding:8px;border:2px solid var(--gray2);border-radius:8px;font-size:13px">
+          <input type="color" id="dealColorCode" value="#8B4513" style="width:50px;height:38px;border:2px solid var(--gray2);border-radius:8px;cursor:pointer">
+          <button class="btn-gold" onclick="setDealColorManual()" style="padding:8px 16px;white-space:nowrap">Pilih</button>
+        </div>
+        <div id="selectedColorPreview" style="display:none;background:#fff;padding:10px;border-radius:8px;display:flex;align-items:center;gap:10px">
+          <div id="selectedColorBubble" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--gray2)"></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--navy)" id="selectedColorNameText"></div>
+            <div style="font-size:11px;color:var(--text2)">Warna yang dipilih</div>
+          </div>
+          <button class="btn-sm btn-danger" onclick="clearDealColor()">Hapus</button>
+        </div>
+      </div>
     </div>
     <div id="komisiPreview" style="background:var(--gray);border-radius:10px;padding:12px;margin-bottom:12px;display:none">
       <span style="font-size:12px;color:var(--text2)">Estimasi Komisi: </span><span id="komisiVal" style="font-size:15px;font-weight:800;color:var(--green)"></span>
@@ -424,8 +438,11 @@ function openDealModal(dealId=null){
   const products=getProductsArr();
   const pSelect=document.getElementById('dProduct');
   pSelect.innerHTML='<option value="">Pilih Produk...</option>'+products.map(p=>`<option value="${p.name}">${p.name}${p.category?' - '+p.category:''}</option>`).join('');
-  if(dealId){const d=allDeals[dealId];if(d){setDealType(d.type||'hunter');document.getElementById('dClient').value=d.client;document.getElementById('dProduct').value=d.product;loadProductColors();if(d.color){selectedDealColor=d.color;selectedDealColorName=d.colorName||'';setTimeout(()=>{const bubble=document.querySelector(`#colorBubbles .color-bubble[style*="${d.color}"]`);if(bubble)bubble.classList.add('active')},100)}document.getElementById('dLocation').value=d.location;document.getElementById('dArea').value=d.area||'';document.getElementById('dValue').value=d.value.toLocaleString('id-ID');document.getElementById('dStatus').value=d.status;document.getElementById('dNote').value=d.note||'';updateKomisiPreview()}}
-  else{setDealType('hunter');['dClient','dLocation','dArea','dValue','dNote'].forEach(id=>document.getElementById(id).value='');pSelect.value='';document.getElementById('dStatus').value='prospect';document.getElementById('komisiPreview').style.display='none';document.getElementById('colorBubbleSection').style.display='none'}
+  // Reset color preview
+  document.getElementById('selectedColorPreview').style.display='none';
+  document.getElementById('dealColorName').value='';
+  if(dealId){const d=allDeals[dealId];if(d){setDealType(d.type||'hunter');document.getElementById('dClient').value=d.client;document.getElementById('dProduct').value=d.product;if(d.color&&d.colorName){selectedDealColor=d.color;selectedDealColorName=d.colorName;document.getElementById('selectedColorBubble').style.background=d.color;document.getElementById('selectedColorNameText').textContent=d.colorName;document.getElementById('selectedColorPreview').style.display='flex'}document.getElementById('dLocation').value=d.location;document.getElementById('dArea').value=d.area||'';document.getElementById('dValue').value=d.value.toLocaleString('id-ID');document.getElementById('dStatus').value=d.status;document.getElementById('dNote').value=d.note||'';updateKomisiPreview()}}
+  else{setDealType('hunter');['dClient','dLocation','dArea','dValue','dNote'].forEach(id=>document.getElementById(id).value='');pSelect.value='';document.getElementById('dStatus').value='prospect';document.getElementById('komisiPreview').style.display='none'}
   document.getElementById('dealModal').classList.add('open')
 }
 function saveDeal(){
@@ -516,29 +533,21 @@ function deleteProduct(pid){
   if(!confirm('Hapus produk ini?'))return;
   db.ref('products/'+pid).remove();
 }
-function loadProductColors(){
-  const pName=document.getElementById('dProduct').value;
-  const product=getProductsArr().find(p=>p.name===pName);
-  const section=document.getElementById('colorBubbleSection');
-  const container=document.getElementById('colorBubbles');
-  if(product&&product.colors){
-    try{
-      const colors=JSON.parse(product.colors);
-      if(colors.length>0){
-        container.innerHTML=colors.map(c=>`<div><div class="color-bubble" style="background:${c.code}" onclick="selectDealColor(this,'${c.code}','${c.name}')"></div><div class="color-name">${c.name}</div></div>`).join('');
-        section.style.display='block';
-        return;
-      }
-    }catch(e){}
-  }
-  section.style.display='none';
-  selectedDealColor='';
-}
-function selectDealColor(el,code,name){
-  document.querySelectorAll('#colorBubbles .color-bubble').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
+function setDealColorManual(){
+  const name=document.getElementById('dealColorName').value.trim();
+  const code=document.getElementById('dealColorCode').value;
+  if(!name){alert('Isi nama warna!');return}
   selectedDealColor=code;
   selectedDealColorName=name;
+  document.getElementById('selectedColorBubble').style.background=code;
+  document.getElementById('selectedColorNameText').textContent=name;
+  document.getElementById('selectedColorPreview').style.display='flex';
+  document.getElementById('dealColorName').value='';
+}
+function clearDealColor(){
+  selectedDealColor='';
+  selectedDealColorName='';
+  document.getElementById('selectedColorPreview').style.display='none';
 }
 
 // ===== COLOR THEME =====
