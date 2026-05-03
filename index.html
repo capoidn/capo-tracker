@@ -117,7 +117,7 @@ tr:hover td{background:#fafbff}
 
 <div id="loginScreen">
   <div style="text-align:center;margin-bottom:24px">
-    <img src="https://i.ibb.co.com/vCm9WshL/1.png" alt="CAPO SPC FLOORING" style="width:300px;height:auto;margin-bottom:16px">
+    <img src="https://i.ibb.co.com/vCm9WshL/1.png" alt="CAPO SPC FLOORING" style="width:180px;height:auto;margin-bottom:16px;background:transparent">
     <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.5)"><span class="sync-dot"></span>Sales Tracker</div>
   </div>
   <div class="auth-box">
@@ -170,7 +170,7 @@ tr:hover td{background:#fafbff}
       <div class="form-group"><label>Tipe Produk SPC</label><select id="dProduct"><option value="">Pilih Tipe...</option><option>SPC Standard 4mm</option><option>SPC Standard 5mm</option><option>SPC Premium 6mm</option><option>SPC Herringbone</option><option>SPC Rigid Core</option><option>SPC Waterproof Series</option><option>Custom / Lainnya</option></select></div>
       <div class="form-group"><label>Lokasi Proyek</label><input type="text" id="dLocation" placeholder="e.g. Bekasi..."></div>
       <div class="form-group"><label>Luas Area (m²)</label><input type="number" id="dArea" placeholder="e.g. 50"></div>
-      <div class="form-group"><label>Nilai Deal (Rp)</label><input type="number" id="dValue" placeholder="e.g. 5000000" oninput="updateKomisiPreview()"></div>
+      <div class="form-group"><label>Nilai Deal (Rp)</label><input type="text" id="dValue" placeholder="e.g. 5.000.000" oninput="formatRupiahInput(this); updateKomisiPreview()"></div>
       <div class="form-group"><label>Status</label><select id="dStatus"><option value="prospect">Prospect</option><option value="negotiation">Negotiation</option><option value="closed">Closed ✓</option><option value="lost">Lost ✗</option></select></div>
     </div>
     <div id="komisiPreview" style="background:var(--gray);border-radius:10px;padding:12px;margin-bottom:12px;display:none">
@@ -261,6 +261,8 @@ function refreshCurrentTab(){const a=document.querySelector('.tab.active');if(a&
 function updatePendingBadge(){const p=Object.values(allUsers).filter(u=>u.status==='pending').length;const b=document.getElementById('pendingBadge');if(b){b.style.display=p?'inline':'none';b.textContent=p}}
 
 // HELPERS
+function formatRupiahInput(input){let val=input.value.replace(/\D/g,'');if(val){val=parseInt(val).toLocaleString('id-ID')}input.value=val}
+function parseRupiahValue(str){return parseInt(str.replace(/\./g,'')||'0')}
 function fmtRp(v){return'Rp '+Number(v||0).toLocaleString('id-ID')}
 function statusBadge(s){const m={prospect:'badge-prospect',negotiation:'badge-negotiation',closed:'badge-closed',lost:'badge-lost'};const l={prospect:'Prospect',negotiation:'Negotiation',closed:'Closed ✓',lost:'Lost ✗'};return`<span class="badge ${m[s]||''}">${l[s]||s}</span>`}
 function typeBadge(t){return t==='hunter'?'<span class="badge badge-hunter">🎯 Hunter</span>':'<span class="badge badge-farmer">🌾 Farmer</span>'}
@@ -316,15 +318,15 @@ window.onclick=e=>{if(e.target.classList.contains('modal-overlay'))e.target.clas
 
 // DEAL
 function setDealType(t){currentDealType=t;document.getElementById('typeHunter').className='type-btn hunter'+(t==='hunter'?' active':'');document.getElementById('typeFarmer').className='type-btn farmer'+(t==='farmer'?' active':'');updateKomisiPreview()}
-function updateKomisiPreview(){const v=parseFloat(document.getElementById('dValue').value)||0;const p=document.getElementById('komisiPreview');if(v>0){p.style.display='block';document.getElementById('komisiVal').textContent=fmtRp(calcKomisi(v,currentDealType))+' ('+(currentDealType==='hunter'?'3%':'1%')+')';}else p.style.display='none'}
+function updateKomisiPreview(){const v=parseRupiahValue(document.getElementById('dValue').value);const p=document.getElementById('komisiPreview');if(v>0){p.style.display='block';document.getElementById('komisiVal').textContent=fmtRp(calcKomisi(v,currentDealType))+' ('+(currentDealType==='hunter'?'3%':'1%')+')';}else p.style.display='none'}
 function openDealModal(dealId=null){
   editingDealId=dealId;document.getElementById('dealModalTitle').textContent=dealId?'Edit Deal':'Tambah Deal Baru';
-  if(dealId){const d=allDeals[dealId];if(d){setDealType(d.type||'hunter');document.getElementById('dClient').value=d.client;document.getElementById('dProduct').value=d.product;document.getElementById('dLocation').value=d.location;document.getElementById('dArea').value=d.area||'';document.getElementById('dValue').value=d.value;document.getElementById('dStatus').value=d.status;document.getElementById('dNote').value=d.note||'';updateKomisiPreview()}}
+  if(dealId){const d=allDeals[dealId];if(d){setDealType(d.type||'hunter');document.getElementById('dClient').value=d.client;document.getElementById('dProduct').value=d.product;document.getElementById('dLocation').value=d.location;document.getElementById('dArea').value=d.area||'';document.getElementById('dValue').value=d.value.toLocaleString('id-ID');document.getElementById('dStatus').value=d.status;document.getElementById('dNote').value=d.note||'';updateKomisiPreview()}}
   else{setDealType('hunter');['dClient','dProduct','dLocation','dArea','dValue','dNote'].forEach(id=>document.getElementById(id).value='');document.getElementById('dStatus').value='prospect';document.getElementById('komisiPreview').style.display='none'}
   document.getElementById('dealModal').classList.add('open')
 }
 function saveDeal(){
-  const client=document.getElementById('dClient').value.trim(),product=document.getElementById('dProduct').value,location=document.getElementById('dLocation').value.trim(),area=document.getElementById('dArea').value,value=parseFloat(document.getElementById('dValue').value),status=document.getElementById('dStatus').value,note=document.getElementById('dNote').value.trim();
+  const client=document.getElementById('dClient').value.trim(),product=document.getElementById('dProduct').value,location=document.getElementById('dLocation').value.trim(),area=document.getElementById('dArea').value,value=parseRupiahValue(document.getElementById('dValue').value),status=document.getElementById('dStatus').value,note=document.getElementById('dNote').value.trim();
   if(!client||!product||!location||!value){alert('Lengkapi: Klien, Produk, Lokasi, Nilai!');return}
   const komisi=calcKomisi(value,currentDealType);
   const data={sales:currentUser,client,product,location,area,value,status,note,type:currentDealType,komisi,date:new Date().toLocaleDateString('id-ID'),timestamp:Date.now()};
