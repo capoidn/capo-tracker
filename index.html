@@ -105,6 +105,15 @@ tr:hover td{background:#fafbff}
 .detail-avatar{width:56px;height:56px;background:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:var(--gold)}
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:2px solid var(--gray2);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);margin-bottom:18px}
 .back-btn:hover{border-color:var(--navy);color:var(--navy)}
+/* ITEM CARD */
+.item-card{border:2px solid var(--gray2);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;transition:.2s}
+.item-card:hover{border-color:var(--gold);background:#fffdf5}
+.color-preview{width:36px;height:36px;border-radius:8px;border:2px solid var(--gray2)}
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:10px;margin-top:12px}
+.color-option{width:50px;height:50px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:.2s;position:relative}
+.color-option:hover{transform:scale(1.1)}
+.color-option.selected{border-color:var(--navy);box-shadow:0 0 0 2px var(--gold)}
+.color-option.selected::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:20px;font-weight:900;text-shadow:0 0 3px rgba(0,0,0,.5)}
 @media(max-width:700px){.stats-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.content{padding:14px}}
 </style>
 </head>
@@ -167,7 +176,7 @@ tr:hover td{background:#fafbff}
     </div>
     <div class="form-grid">
       <div class="form-group"><label>Nama Klien / Proyek</label><input type="text" id="dClient" placeholder="e.g. Bpk. Hendra"></div>
-      <div class="form-group"><label>Tipe Produk SPC</label><select id="dProduct"><option value="">Pilih Tipe...</option><option>SPC Standard 4mm</option><option>SPC Standard 5mm</option><option>SPC Premium 6mm</option><option>SPC Herringbone</option><option>SPC Rigid Core</option><option>SPC Waterproof Series</option><option>Custom / Lainnya</option></select></div>
+      <div class="form-group"><label>Tipe Produk SPC</label><select id="dProduct"></select></div>
       <div class="form-group"><label>Lokasi Proyek</label><input type="text" id="dLocation" placeholder="e.g. Bekasi..."></div>
       <div class="form-group"><label>Luas Area (m²)</label><input type="number" id="dArea" placeholder="e.g. 50"></div>
       <div class="form-group"><label>Nilai Deal (Rp)</label><input type="text" id="dValue" placeholder="e.g. 5.000.000" oninput="formatRupiahInput(this); updateKomisiPreview()"></div>
@@ -208,6 +217,59 @@ tr:hover td{background:#fafbff}
   <div class="modal" style="width:600px;background:transparent;box-shadow:none;padding:0"><img id="photoModalImg" style="width:100%;border-radius:14px;max-height:85vh;object-fit:contain"></div>
 </div>
 
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><div class="modal-title" id="productModalTitle">Tambah Produk Baru</div><button class="btn-close" onclick="closeModal('productModal')">×</button></div>
+    <div class="form-group"><label>Nama Produk</label><input type="text" id="pName" placeholder="e.g. SPC Premium Oak 6mm"></div>
+    <div class="form-group"><label>Kategori</label><select id="pCategory"><option value="SPC Flooring">SPC Flooring</option><option value="Furniture">Furniture</option><option value="Accessories">Accessories</option><option value="Lainnya">Lainnya</option></select></div>
+    <div class="form-group"><label>Deskripsi</label><textarea id="pDesc" placeholder="Deskripsi produk..." style="min-height:60px"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn-primary" onclick="saveProduct()" style="flex:1">Simpan Produk</button>
+      <button onclick="closeModal('productModal')" style="padding:12px 18px;border:2px solid var(--gray2);background:#fff;border-radius:10px;cursor:pointer;font-weight:600">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLOR THEME MODAL -->
+<div class="modal-overlay" id="colorModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-header"><div class="modal-title">🎨 Kelola Tema Warna</div><button class="btn-close" onclick="closeModal('colorModal')">×</button></div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Pilih Warna Utama (Navy)</div>
+      <div class="color-grid">
+        <div class="color-option" style="background:#0d2a4e" onclick="applyTheme('#0d2a4e','#c9a84c')"></div>
+        <div class="color-option" style="background:#1a3a5c" onclick="applyTheme('#1a3a5c','#c9a84c')"></div>
+        <div class="color-option" style="background:#0f172a" onclick="applyTheme('#0f172a','#c9a84c')"></div>
+        <div class="color-option" style="background:#1e293b" onclick="applyTheme('#1e293b','#c9a84c')"></div>
+        <div class="color-option" style="background:#334155" onclick="applyTheme('#334155','#c9a84c')"></div>
+        <div class="color-option" style="background:#2c3e50" onclick="applyTheme('#2c3e50','#c9a84c')"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Pilih Warna Aksen (Gold)</div>
+      <div class="color-grid">
+        <div class="color-option" style="background:#c9a84c" onclick="applyTheme(currentNavy,'#c9a84c')"></div>
+        <div class="color-option" style="background:#d4af37" onclick="applyTheme(currentNavy,'#d4af37')"></div>
+        <div class="color-option" style="background:#e6b800" onclick="applyTheme(currentNavy,'#e6b800')"></div>
+        <div class="color-option" style="background:#cd7f32" onclick="applyTheme(currentNavy,'#cd7f32')"></div>
+        <div class="color-option" style="background:#ff6b35" onclick="applyTheme(currentNavy,'#ff6b35')"></div>
+        <div class="color-option" style="background:#06d6a0" onclick="applyTheme(currentNavy,'#06d6a0')"></div>
+        <div class="color-option" style="background:#6366f1" onclick="applyTheme(currentNavy,'#6366f1')"></div>
+        <div class="color-option" style="background:#ec4899" onclick="applyTheme(currentNavy,'#ec4899')"></div>
+      </div>
+    </div>
+    <div style="background:var(--gray);padding:14px;border-radius:10px;margin-top:16px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Preview:</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="flex:1;background:var(--navy);color:#fff;padding:12px;border-radius:8px;font-weight:700;text-align:center">Navy</div>
+        <div style="flex:1;background:var(--gold);color:var(--navy);padding:12px;border-radius:8px;font-weight:700;text-align:center">Gold</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveTheme()" style="margin-top:16px">Simpan & Terapkan Tema</button>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div id="app">
   <div class="navbar">
@@ -229,6 +291,7 @@ tr:hover td{background:#fafbff}
     <div class="tab" onclick="switchTab('absen')" id="tab-absen">📍 Absensi</div>
     <div class="tab" onclick="switchTab('komisi')" id="tab-komisi">💰 Komisi</div>
     <div class="tab" onclick="switchTab('leaderboard')" id="tab-leaderboard">🏆 Leaderboard</div>
+    <div class="tab" onclick="switchTab('products')" id="tab-products">📦 Produk</div>
     <div class="tab" onclick="switchTab('admin')" id="tab-admin" style="display:none">⚙ Admin <span id="pendingBadge" style="display:none;background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></div>
   </div>
   <div class="content">
@@ -237,6 +300,7 @@ tr:hover td{background:#fafbff}
     <div id="tab-content-absen" style="display:none"></div>
     <div id="tab-content-komisi" style="display:none"></div>
     <div id="tab-content-leaderboard" style="display:none"></div>
+    <div id="tab-content-products" style="display:none"></div>
     <div id="tab-content-admin" style="display:none"></div>
     <div id="tab-content-salesdetail" style="display:none"></div>
   </div>
@@ -247,14 +311,17 @@ const firebaseConfig={apiKey:"AIzaSyATcirG09JfK5NSqB2WB-Q4bbff-CoKnPI",authDomai
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-let currentUser=null,isAdmin=false,editingDealId=null,currentDealType='hunter',absenPhotoData=null;
-let allDeals={},allAbsens={},allUsers={};
+let currentUser=null,isAdmin=false,editingDealId=null,currentDealType='hunter',absenPhotoData=null,editingProductId=null;
+let allDeals={},allAbsens={},allUsers={},allProducts={};
+let currentNavy='#0d2a4e',currentGold='#c9a84c';
 const ADMIN_PASS='capojaya';
 
 window.onload=()=>{
   db.ref('users').on('value',snap=>{allUsers=snap.val()||{};renderLoginSelect();updatePendingBadge();document.getElementById('loadingScreen').style.display='none';document.getElementById('loginScreen').style.display='flex'});
   db.ref('deals').on('value',snap=>{allDeals=snap.val()||{};refreshCurrentTab()});
   db.ref('absens').on('value',snap=>{allAbsens=snap.val()||{};refreshCurrentTab()});
+  db.ref('products').on('value',snap=>{allProducts=snap.val()||{};refreshCurrentTab()});
+  db.ref('theme').on('value',snap=>{const t=snap.val();if(t){currentNavy=t.navy||'#0d2a4e';currentGold=t.gold||'#c9a84c';applyThemeColors()}});
 };
 
 function refreshCurrentTab(){const a=document.querySelector('.tab.active');if(a&&currentUser){const n=a.id.replace('tab-','');if(n!=='salesdetail')switchTab(n)}}
@@ -269,6 +336,7 @@ function typeBadge(t){return t==='hunter'?'<span class="badge badge-hunter">🎯
 function calcKomisi(v,t){return Math.round((v||0)*(t==='hunter'?0.03:0.01))}
 function getDealsArr(){return Object.entries(allDeals).map(([id,d])=>({...d,id}))}
 function getAbsensArr(){return Object.entries(allAbsens).map(([id,a])=>({...a,id}))}
+function getProductsArr(){return Object.entries(allProducts).map(([id,p])=>({...p,id}))}
 function getApprovedMembers(){return Object.values(allUsers).filter(u=>u.status==='approved').map(u=>u.name)}
 function myDeals(){return getDealsArr().filter(x=>x.sales===currentUser)}
 function dealsBySales(name){return getDealsArr().filter(x=>x.sales===name)}
@@ -300,7 +368,7 @@ function startApp(){document.getElementById('loginScreen').style.display='none';
 
 // TABS
 function switchTab(name){
-  ['dashboard','deals','absen','komisi','leaderboard','admin','salesdetail'].forEach(t=>{
+  ['dashboard','deals','absen','komisi','leaderboard','products','admin','salesdetail'].forEach(t=>{
     document.getElementById('tab-content-'+t).style.display=t===name?'block':'none';
     const tab=document.getElementById('tab-'+t);if(tab)tab.classList.toggle('active',t===name)
   });
@@ -309,6 +377,7 @@ function switchTab(name){
   if(name==='absen')renderAbsen();
   if(name==='komisi')renderKomisi();
   if(name==='leaderboard')renderLeaderboard();
+  if(name==='products')renderProducts();
   if(name==='admin')renderAdmin()
 }
 
@@ -321,8 +390,12 @@ function setDealType(t){currentDealType=t;document.getElementById('typeHunter').
 function updateKomisiPreview(){const v=parseRupiahValue(document.getElementById('dValue').value);const p=document.getElementById('komisiPreview');if(v>0){p.style.display='block';document.getElementById('komisiVal').textContent=fmtRp(calcKomisi(v,currentDealType))+' ('+(currentDealType==='hunter'?'3%':'1%')+')';}else p.style.display='none'}
 function openDealModal(dealId=null){
   editingDealId=dealId;document.getElementById('dealModalTitle').textContent=dealId?'Edit Deal':'Tambah Deal Baru';
+  // Populate products
+  const products=getProductsArr();
+  const pSelect=document.getElementById('dProduct');
+  pSelect.innerHTML='<option value="">Pilih Produk...</option>'+products.map(p=>`<option value="${p.name}">${p.name}${p.category?' - '+p.category:''}</option>`).join('');
   if(dealId){const d=allDeals[dealId];if(d){setDealType(d.type||'hunter');document.getElementById('dClient').value=d.client;document.getElementById('dProduct').value=d.product;document.getElementById('dLocation').value=d.location;document.getElementById('dArea').value=d.area||'';document.getElementById('dValue').value=d.value.toLocaleString('id-ID');document.getElementById('dStatus').value=d.status;document.getElementById('dNote').value=d.note||'';updateKomisiPreview()}}
-  else{setDealType('hunter');['dClient','dProduct','dLocation','dArea','dValue','dNote'].forEach(id=>document.getElementById(id).value='');document.getElementById('dStatus').value='prospect';document.getElementById('komisiPreview').style.display='none'}
+  else{setDealType('hunter');['dClient','dLocation','dArea','dValue','dNote'].forEach(id=>document.getElementById(id).value='');pSelect.value='';document.getElementById('dStatus').value='prospect';document.getElementById('komisiPreview').style.display='none'}
   document.getElementById('dealModal').classList.add('open')
 }
 function saveDeal(){
@@ -346,6 +419,68 @@ function viewPhotoSrc(src){document.getElementById('photoModalImg').src=src;docu
 // ADMIN APPROVE/REJECT
 function approveUser(uid){db.ref('users/'+uid+'/status').set('approved')}
 function rejectUser(uid){if(!confirm('Tolak?'))return;db.ref('users/'+uid).remove()}
+
+// ===== PRODUCT MANAGEMENT =====
+function openProductModal(pid=null){
+  editingProductId=pid;
+  document.getElementById('productModalTitle').textContent=pid?'Edit Produk':'Tambah Produk Baru';
+  if(pid&&allProducts[pid]){
+    const p=allProducts[pid];
+    document.getElementById('pName').value=p.name||'';
+    document.getElementById('pCategory').value=p.category||'SPC Flooring';
+    document.getElementById('pDesc').value=p.desc||'';
+  }else{
+    document.getElementById('pName').value='';
+    document.getElementById('pCategory').value='SPC Flooring';
+    document.getElementById('pDesc').value='';
+  }
+  document.getElementById('productModal').classList.add('open');
+}
+function saveProduct(){
+  const name=document.getElementById('pName').value.trim();
+  const category=document.getElementById('pCategory').value;
+  const desc=document.getElementById('pDesc').value.trim();
+  if(!name){alert('Nama produk wajib diisi!');return}
+  const data={name,category,desc,createdAt:new Date().toLocaleDateString('id-ID')};
+  if(editingProductId)db.ref('products/'+editingProductId).update(data);
+  else db.ref('products').push(data);
+  closeModal('productModal');
+}
+function deleteProduct(pid){
+  if(!confirm('Hapus produk ini?'))return;
+  db.ref('products/'+pid).remove();
+}
+
+// ===== COLOR THEME =====
+function openColorModal(){
+  document.getElementById('colorModal').classList.add('open');
+}
+function applyTheme(navy,gold){
+  currentNavy=navy;
+  currentGold=gold;
+  applyThemeColors();
+}
+function applyThemeColors(){
+  const r=document.documentElement;
+  r.style.setProperty('--navy',currentNavy);
+  r.style.setProperty('--navy2',lightenColor(currentNavy,15));
+  r.style.setProperty('--gold',currentGold);
+  r.style.setProperty('--gold2',lightenColor(currentGold,15));
+}
+function lightenColor(col,amt){
+  let usePound=false;
+  if(col[0]==='#'){col=col.slice(1);usePound=true}
+  const num=parseInt(col,16);
+  let r=(num>>16)+amt;if(r>255)r=255;else if(r<0)r=0;
+  let g=((num>>8)&0x00FF)+amt;if(g>255)g=255;else if(g<0)g=0;
+  let b=(num&0x0000FF)+amt;if(b>255)b=255;else if(b<0)b=0;
+  return(usePound?'#':'')+(r<<16|g<<8|b).toString(16).padStart(6,'0');
+}
+function saveTheme(){
+  db.ref('theme').set({navy:currentNavy,gold:currentGold});
+  closeModal('colorModal');
+  alert('✅ Tema warna berhasil disimpan dan diterapkan ke semua user!');
+}
 
 // ===== RENDER DASHBOARD =====
 function renderDashboard(){
@@ -458,6 +593,55 @@ function renderLeaderboard(){
     <div class="card"><div class="card-header"><div class="card-title">🎯 Hunter Deals</div></div>${lb(hunterMap,v=>v+' deal')}</div>
     <div class="card"><div class="card-header"><div class="card-title">✅ Closed Deals</div></div>${lb(closedMap,v=>v+' deal')}</div>
   </div>`
+}
+
+// ===== RENDER PRODUCTS =====
+function renderProducts(){
+  const products=getProductsArr();
+  const byCategory={};
+  products.forEach(p=>{const cat=p.category||'Lainnya';if(!byCategory[cat])byCategory[cat]=[];byCategory[cat].push(p)});
+  document.getElementById('tab-content-products').innerHTML=`
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📦 Kelola Produk & Item</div>
+      <div style="display:flex;gap:8px">
+        ${isAdmin?`<button class="btn-outline" onclick="openColorModal()">🎨 Tema Warna</button>`:''}
+        <button class="btn-gold" onclick="openProductModal()">+ Tambah Produk</button>
+      </div>
+    </div>
+    ${products.length===0?'<div class="empty"><div class="empty-icon">📦</div><p>Belum ada produk. Klik "Tambah Produk" untuk mulai.</p></div>'
+    :Object.entries(byCategory).map(([cat,items])=>`
+      <div style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gray2)">${cat} (${items.length})</div>
+        ${items.map(p=>`
+          <div class="item-card">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">${p.name}</div>
+              ${p.desc?`<div style="font-size:12px;color:var(--text2)">${p.desc}</div>`:''}
+              <div style="font-size:11px;color:var(--text2);margin-top:6px">Ditambahkan: ${p.createdAt||'—'}</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-sm" style="background:var(--gray);color:var(--navy)" onclick="openProductModal('${p.id}')">✏</button>
+              <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">🗑</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}
+  </div>
+  ${isAdmin?`
+  <div class="card" style="background:var(--navy);color:#fff">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:6px">TEMA WARNA AKTIF</div>
+        <div style="display:flex;gap:12px;margin-top:12px">
+          <div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">Navy</div><div style="width:60px;height:40px;background:var(--navy);border:2px solid rgba(255,255,255,.3);border-radius:8px"></div></div>
+          <div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">Gold</div><div style="width:60px;height:40px;background:var(--gold);border:2px solid rgba(255,255,255,.3);border-radius:8px"></div></div>
+        </div>
+      </div>
+      <button class="btn-gold" onclick="openColorModal()">Ubah Tema</button>
+    </div>
+  </div>`:''}`
 }
 
 // ===== RENDER ADMIN =====
